@@ -33,18 +33,28 @@ subcommands:
             - ArgRequiredElseHelp
         args:
             - ksize:
-                help: ksize
+                long: ksize
+                help: K-mer size, aka length of "DNA words" or substrings extracted from sequences
                 short: K
                 default_value: "21"
                 takes_value: true
                 required: false
             - coding_kmers:
+                long: coding_kmers
                 help: Plain text file of k-mers extracted from coding sequences, e.g. from a file like Homo_sapiens.GRCh38.cds.all.fa.gz
                 required: true
+                takes_value: true
             - non_coding_kmers:
+                long: non_coding_kmers
                 help: Plain text file of k-mers extracted from non-coding sequences, e.g. from a file like Homo_sapiens.GRCh38.ncrna.all.fa.gz
                 required: true
+                takes_value: true
             - sequence_files:
                 help: FASTA/FASTQ files
                 multiple: true
                 required: true
+                takes_value: true
+            - verbose:
+                short: v
+                multiple: true
+                help: Sets the level of verbosity

@@ -15,6 +15,8 @@ use std::fs::File;
 fn read_kmer_file(kmer_file: &Path) -> HashSet<std::string::String> {
     let mut kmers = HashSet::new();
 
+    eprintln!("Reading {0:?} ...", kmer_file.to_string_lossy());
+
     // Read in coding k-mers
     let f = File::open(kmer_file).unwrap();
     
@@ -23,8 +25,9 @@ fn read_kmer_file(kmer_file: &Path) -> HashSet<std::string::String> {
     for line in f.lines() {
         let kmer = line.unwrap();
         kmers.insert(kmer.to_owned());
-    }    
-    
+    }
+    eprintln!("\tDone!");
+
     return kmers
 }
 
@@ -53,6 +56,8 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
         eprintln!("Classifying reads in file: {}", file);
 
         let mut n_bases = 0;
+        println!("sequence_id\tsequence\tcompared_to\tjaccard\tksize");
+
         fastx::fastx_cli(&file[..], |_| {}, |seq| {
             let mut this_read_kmers = HashSet::new();
             // seq.id is the name of the record
@@ -61,7 +66,6 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
 
             // keep track of the total number of bases
             n_bases += seq.seq.len();
-            
 
             // keep track of the number of AAAA (or TTTT via canonicalization) in the
             // file (normalize makes sure every base is capitalized for comparison)
@@ -72,17 +76,14 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
                 all_kmers.insert(kmer.to_owned());
 //            println!("{}", kmer);
             }
-            let this_read_kmers_in_coding = coding_kmers.intersection(&this_read_kmers);
-            let this_read_kmers_in_noncoding = non_coding_kmers.intersection(&this_read_kmers);
             let jaccard_coding = jaccardize(&this_read_kmers, &coding_kmers, verbosity);
             let jaccard_non_coding = jaccardize(&this_read_kmers, &non_coding_kmers, verbosity);
             if verbosity > 0 {
-                println!("jaccard with coding: {jaccard}", jaccard=jaccard_coding);
-                println!("jaccard with non coding: {jaccard}", jaccard=jaccard_non_coding);
-                // println!("{seq} jaccard with coding: {jaccard}", seq=id, jaccard=jaccard_coding);
-                // println!("{seq} jaccard with non coding: {jaccard}", seq=id, jaccard=jaccard_non_coding);
-                
+                eprintln!("{0:?}\n{1:?}\tjaccard with coding: {jaccard}", &seq.id, &seq.seq, jaccard=jaccard_coding);
+                eprintln!("{0:?}\n{1:?}\tjaccard with non coding: {jaccard}", &seq.id, &seq.seq, jaccard=jaccard_non_coding);
             }
+            println!("{0:?}\t{1:?}\tcoding\t{jaccard}\t{k}", &seq.id, &seq.seq, jaccard=jaccard_coding, k=ksize);
+            println!("{0:?}\t{1:?}\tnon_coding\t{jaccard}\t{k}", &seq.id, &seq.seq, jaccard=jaccard_non_coding, k=ksize);
 
         }).expect(&format!("Could not read {}", file));
 
