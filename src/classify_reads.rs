@@ -17,7 +17,7 @@ fn read_kmer_file(kmer_file: &Path) -> HashSet<std::string::String> {
 
     // Read in coding k-mers
     let f = File::open(kmer_file).unwrap();
-    
+
     let f = BufReader::new(f);
 
     for line in f.lines() {
