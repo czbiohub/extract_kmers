@@ -5,10 +5,16 @@ use exitfailure::ExitFailure;
 extern crate clap;
 use clap::{App, load_yaml, value_t};
 
+use std::path::Path;
+
 mod extract;
 mod classify_reads;
 
 fn main() -> Result<(), ExitFailure> {
+    // let kmer_path = Path::new("../test-data/primers_R1.fasta");
+    // classify_reads::classify(
+        
+    //     kmer_path);
 
     let yml = load_yaml!("must.yml");
     let m = App::from_yaml(yml).get_matches();
@@ -21,7 +27,7 @@ fn main() -> Result<(), ExitFailure> {
         2 => println!("Tons of verbose info"),
         3 | _ => println!("Don't be crazy"),
     }
-    let verbosity = m.occurrences_of("v");
+    let verbosity = m.occurrences_of("v") as usize;
 
     match m.subcommand_name() {
         Some("extract") => {
@@ -44,6 +50,7 @@ fn main() -> Result<(), ExitFailure> {
 
             // Convert ksize string argument to integer
             let ksize: u8 = value_t!(cmd, "ksize", u8).unwrap_or_else(|e| e.exit());
+            println!("{}", ksize);
 
             let coding_kmer_file = Path::new(cmd.value_of("coding_kmers").unwrap());
             let non_coding_kmer_file = Path::new(cmd.value_of("non_coding_kmers").unwrap());
