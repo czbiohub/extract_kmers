@@ -1,9 +1,10 @@
 use std::str;
+use std::collections::HashSet;
 extern crate lazy_static;
 extern crate needletail;
 use needletail::{fastx};
 extern crate clap;
-use clap::{Arg, App};
+use clap::{Arg, App, value_t};
 
 // Local code
 mod codon_table;
@@ -11,7 +12,7 @@ mod codon_table;
 fn main() {
     let matches = App::new("My Super Program")
         .version("1.0")
-        .author("Kevin K. <kbknapp@gmail.com>")
+        .author("Olga Botvinnik <olga.botvinnik@czbiohub.org>")
         .about("Does awesome things")
         .arg(Arg::with_name("files")
             .short("f")
@@ -33,11 +34,15 @@ fn main() {
 
     let files = matches.values_of("files").unwrap();
 
+    // Convert ksize string argument to integer
+    let ksize = value_t!(matches, "ksize", u8).unwrap_or_else(|e| e.exit());
+    let mut all_kmers = HashSet::new();
+
+
     for file in files {
-        println!("Counting k-mers in file: {}", file);
+        eprintln!("Counting k-mers in file: {}", file);
 
         let mut n_bases = 0;
-        let mut n_valid_kmers = 0;
         fastx::fastx_cli(&file[..], |_| {}, |seq| {
         // seq.id is the name of the record
         // seq.seq is the base sequence
@@ -47,19 +52,21 @@ fn main() {
         n_bases += seq.seq.len();
 
         // keep track of the number of AAAA (or TTTT via canonicalization) in the
-        // file (normalize makes sure ever base is capitalized for comparison)
-        for (_, kmer, _) in seq.normalize(false).kmers(4, true) {
+        // file (normalize makes sure every base is capitalized for comparison)
+        for (_, kmer, _) in seq.normalize(false).kmers(ksize, false) {
             let kmer = str::from_utf8(&kmer).unwrap();
-
-            if kmer == "AAAA" {
-                n_valid_kmers += 1;
-            }
-            println!("{}", codon_table::CODON_TABLE.get(&kmer[..3]).unwrap());
+            all_kmers.insert(kmer.to_owned());
+//            println!("{}", kmer);
         }
         }).expect(&format!("Could not read {}", file));
 
-        println!("There are {} bases in your file.", n_bases);
-        println!("There are {} AAAAs in your file.", n_valid_kmers);
+
+        eprintln!("There are {} bases in your file.", n_bases);
+    }
+    eprintln!("There are {} k-mers in your file.", all_kmers.len());
+
+    for kmer in all_kmers {
+        println!("{}", kmer);
     }
 
 }
