@@ -1,3 +1,4 @@
+use std::path::Path;
 extern crate lazy_static;
 extern crate needletail;
 use exitfailure::ExitFailure;
@@ -52,8 +53,8 @@ fn main() -> Result<(), ExitFailure> {
             println!("{}", ksize);
 
             let coding_kmer_file = Path::new(cmd.value_of("coding_kmers").unwrap());
-            println!("{}", coding_kmer_file.display());
             let non_coding_kmer_file = Path::new(cmd.value_of("noncoding_kmers").unwrap());
+
 
             // Convert ksize string argument to integer
             let ksize: u8 = value_t!(cmd, "ksize", u8).unwrap_or_else(|e| e.exit());
