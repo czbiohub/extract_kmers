@@ -1,65 +1,69 @@
-use std::str;
+use std::path::Path;
 extern crate lazy_static;
 extern crate needletail;
-use needletail::{fastx};
+use exitfailure::ExitFailure;
 extern crate clap;
-use clap::{Arg, App};
+use clap::{App, load_yaml, value_t, ArgMatches};
 
-// Local code
-mod codon_table;
+mod extract;
+mod classify_reads;
 
-fn main() {
-    let matches = App::new("My Super Program")
-        .version("1.0")
-        .author("Kevin K. <kbknapp@gmail.com>")
-        .about("Does awesome things")
-        .arg(Arg::with_name("files")
-            .short("f")
-            .long("files")
-            .value_name("FILES")
-            .help("Input sequence file")
-            .required(true)
-            .multiple(true)
-            .takes_value(true))
-        .arg(Arg::with_name("ksize")
-            .short("k")
-            .long("ksize")
-            .value_name("KSIZE")
-            .help("k-mer size")
-            // Clap currently only handles strings. Have to convert to int later
-            .default_value("21")
-            .takes_value(true))
-        .get_matches();
+fn main() -> Result<(), ExitFailure> {
+    // let kmer_path = Path::new("../test-data/primers_R1.fasta");
+    // classify_reads::classify(
+        
+    //     kmer_path);
 
-    let files = matches.values_of("files").unwrap();
+    let yml = load_yaml!("must.yml");
+    let m: ArgMatches = App::from_yaml(yml).get_matches();
 
-    for file in files {
-        println!("Counting k-mers in file: {}", file);
-
-        let mut n_bases = 0;
-        let mut n_valid_kmers = 0;
-        fastx::fastx_cli(&file[..], |_| {}, |seq| {
-        // seq.id is the name of the record
-        // seq.seq is the base sequence
-        // seq.qual is an optional quality score
-
-        // keep track of the total number of bases
-        n_bases += seq.seq.len();
-
-        // keep track of the number of AAAA (or TTTT via canonicalization) in the
-        // file (normalize makes sure ever base is capitalized for comparison)
-        for (_, kmer, _) in seq.normalize(false).kmers(4, true) {
-            let kmer = str::from_utf8(&kmer).unwrap();
-
-            if kmer == "AAAA" {
-                n_valid_kmers += 1;
-            }
-            println!("{}", codon_table::CODON_TABLE.get(&kmer[..3]).unwrap());
-        }
-        }).expect(&format!("Could not read {}", file));
-
-        println!("There are {} bases in your file.", n_bases);
-        println!("There are {} AAAAs in your file.", n_valid_kmers);
+    // Vary the output based on how many times the user used the "verbose" flag
+    // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
+    match m.occurrences_of("v") {
+        0 => println!("No verbose info"),
+        1 => println!("Some verbose info"),
+        2 => println!("Tons of verbose info"),
+        3 | _ => println!("Don't be crazy"),
     }
+    let verbosity: usize = m.occurrences_of("v") as usize;
 
+    match m.subcommand_name() {
+        Some("extract") => {
+            let cmd = m.subcommand_matches("extract").unwrap();
+            let sequence_files = cmd
+                .values_of("sequence_files")
+                .map(|vals| vals.collect::<Vec<_>>())
+                .unwrap();
+
+            // Convert ksize string argument to integer
+            let ksize: u8 = value_t!(cmd, "ksize", u8).unwrap_or_else(|e| e.exit());
+            extract::extract_kmers(sequence_files, ksize);
+        }
+        Some("classify") => {
+            let cmd: &ArgMatches = m.subcommand_matches("classify").unwrap();
+            let sequence_files = cmd
+                .values_of("sequence_files")
+                .map(|vals| vals.collect::<Vec<_>>())
+                .unwrap();
+
+            // Convert ksize string argument to integer
+            let ksize: u8 = value_t!(cmd, "ksize", u8).unwrap_or_else(|e| e.exit());
+            println!("{}", ksize);
+
+            let coding_kmer_file: &Path = Path::new(cmd.value_of("coding_kmers").unwrap());
+            let non_coding_kmer_file: &Path = Path::new(cmd.value_of("non_coding_kmers").unwrap());
+
+            // Convert ksize string argument to integer
+            let ksize: u8 = value_t!(cmd, "ksize", u8).unwrap_or_else(|e| e.exit());
+
+            classify_reads::classify(sequence_files,
+                                     coding_kmer_file,
+                                     non_coding_kmer_file,
+                                     ksize, verbosity);
+        }
+        _ => {
+            println!("{:?}", m);
+        }
+    }
+    Ok(())
 }

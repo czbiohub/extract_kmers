@@ -1,10 +1,11 @@
 [package]
-name = "extract_kmers"
+name = "must"
 version = "0.1.0"
 authors = ["Olga Botvinnik <olga.botvinnik@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 needletail = "^0.2.0"
-clap = "^2.33"
+clap = {version = "~2.32.0", features = ["yaml"]}
 lazy_static = "^1.3.0"
+exitfailure = "0.5.1"
