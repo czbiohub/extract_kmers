@@ -5,8 +5,6 @@ use exitfailure::ExitFailure;
 extern crate clap;
 use clap::{App, load_yaml, value_t};
 
-use std::path::Path;
-
 mod extract;
 mod classify_reads;
 

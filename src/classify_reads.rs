@@ -9,7 +9,6 @@ use needletail::{fastx};
 use std::io::{BufReader};
 use std::io::prelude::*;
 use std::fs::File;
-use std::path::Path;
 
 
 
@@ -68,9 +67,9 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
             // file (normalize makes sure every base is capitalized for comparison)
 
             for (_, kmer, _) in seq.normalize(false).kmers(ksize, false) {
-                let kmer: &str = &String::from_utf8(kmer.to_vec()).unwrap();
-                this_read_kmers.insert(kmer);
-                all_kmers.insert(kmer);
+                let kmer = str::from_utf8(&kmer).unwrap();
+                this_read_kmers.insert(kmer.to_owned());
+                all_kmers.insert(kmer.to_owned());
 //            println!("{}", kmer);
             }
             let this_read_kmers_in_coding = coding_kmers.intersection(&this_read_kmers);
