@@ -17,7 +17,7 @@ fn read_kmer_file(kmer_file: &Path) -> HashSet<std::string::String> {
 
     // Read in coding k-mers
     let f = File::open(kmer_file).unwrap();
-    
+
     let f = BufReader::new(f);
 
     for line in f.lines() {
@@ -34,6 +34,7 @@ fn jaccardize(set1: &HashSet<std::string::String>, set2: &HashSet<std::string::S
     if denominator > 0.0 {
         let numerator_set: HashSet<_> = set1.intersection(&set2).collect();
         let numerator = numerator_set.len() as f64;
+
         if verbose > 0 {
             println!("Number of overlapping k-mers: {numerator}/{denominator}",
                      numerator=numerator, denominator=denominator)
