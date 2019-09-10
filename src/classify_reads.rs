@@ -62,6 +62,7 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
             // seq.qual is an optional quality score
 
             // keep track of the total number of bases
+            let id = &seq.id;
             n_bases += seq.seq.len();
             
 
@@ -79,10 +80,10 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
             let jaccard_coding = jaccardize(&this_read_kmers, &coding_kmers, verbosity);
             let jaccard_non_coding = jaccardize(&this_read_kmers, &non_coding_kmers, verbosity);
             if verbosity > 0 {
-                println!("jaccard with coding: {jaccard}", jaccard=jaccard_coding);
-                println!("jaccard with non coding: {jaccard}", jaccard=jaccard_non_coding);
-                // println!("{seq} jaccard with coding: {jaccard}", seq=seq.id, jaccard=jaccard_coding);
-                // println!("{seq} jaccard with non coding: {jaccard}", seq=seq.id, jaccard=jaccard_non_coding);
+                // println!("jaccard with coding: {jaccard}", jaccard=jaccard_coding);
+                // println!("jaccard with non coding: {jaccard}", jaccard=jaccard_non_coding);
+                println!("{seq} jaccard with coding: {jaccard}", seq=id, jaccard=jaccard_coding);
+                println!("{seq} jaccard with non coding: {jaccard}", seq=id, jaccard=jaccard_non_coding);
                 
             }
 
