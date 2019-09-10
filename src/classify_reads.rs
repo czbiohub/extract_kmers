@@ -33,8 +33,7 @@ fn read_kmer_file(kmer_file: &Path) -> HashSet<std::string::String> {
 fn jaccardize(set1: &HashSet<std::string::String>, set2: &HashSet<std::string::String>, verbose: usize) -> f64 {
     let denominator = min(set1.len(), set2.len()) as f64;
     if denominator > 0.0 {
-        let numerator_set: HashSet<_> = set1.intersection(&set2).collect();
-        let numerator = numerator_set.len() as f64;
+        let numerator = set1.intersection(&set2).count() as f64;
         if verbose > 0 {
             println!("Number of overlapping k-mers: {numerator}/{denominator}",
                      numerator=numerator, denominator=denominator)
@@ -62,7 +61,6 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
             // seq.qual is an optional quality score
 
             // keep track of the total number of bases
-            let id = &seq.id;
             n_bases += seq.seq.len();
             
 
@@ -80,10 +78,10 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
             let jaccard_coding = jaccardize(&this_read_kmers, &coding_kmers, verbosity);
             let jaccard_non_coding = jaccardize(&this_read_kmers, &non_coding_kmers, verbosity);
             if verbosity > 0 {
-                // println!("jaccard with coding: {jaccard}", jaccard=jaccard_coding);
-                // println!("jaccard with non coding: {jaccard}", jaccard=jaccard_non_coding);
-                println!("{seq} jaccard with coding: {jaccard}", seq=id, jaccard=jaccard_coding);
-                println!("{seq} jaccard with non coding: {jaccard}", seq=id, jaccard=jaccard_non_coding);
+                println!("jaccard with coding: {jaccard}", jaccard=jaccard_coding);
+                println!("jaccard with non coding: {jaccard}", jaccard=jaccard_non_coding);
+                // println!("{seq} jaccard with coding: {jaccard}", seq=id, jaccard=jaccard_coding);
+                // println!("{seq} jaccard with non coding: {jaccard}", seq=id, jaccard=jaccard_non_coding);
                 
             }
 
