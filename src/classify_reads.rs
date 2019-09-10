@@ -58,6 +58,7 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
         let mut n_bases = 0;
         println!("sequence_id\tsequence\tcompared_to\tjaccard\tksize");
 
+
         fastx::fastx_cli(&file[..], |_| {}, |seq| {
             let mut this_read_kmers = HashSet::new();
             // seq.id is the name of the record
@@ -66,6 +67,9 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
 
             // keep track of the total number of bases
             n_bases += seq.seq.len();
+
+            let seq_seq = str::from_utf8(&seq.seq).unwrap().to_owned();
+            let seq_id = seq.id.to_owned();
 
             // keep track of the number of AAAA (or TTTT via canonicalization) in the
             // file (normalize makes sure every base is capitalized for comparison)
@@ -79,11 +83,11 @@ pub fn classify(sequence_files: Vec<&str>, coding_kmer_file: &Path,
             let jaccard_coding = jaccardize(&this_read_kmers, &coding_kmers, verbosity);
             let jaccard_non_coding = jaccardize(&this_read_kmers, &non_coding_kmers, verbosity);
             if verbosity > 0 {
-                eprintln!("{0:?}\n{1:?}\tjaccard with coding: {jaccard}", &seq.id, &seq.seq, jaccard=jaccard_coding);
-                eprintln!("{0:?}\n{1:?}\tjaccard with non coding: {jaccard}", &seq.id, &seq.seq, jaccard=jaccard_non_coding);
+                eprintln!("{0:?}\n{1:?}\tjaccard with coding: {jaccard}", &seq_id, &seq_seq, jaccard=jaccard_coding);
+                eprintln!("{0:?}\n{1:?}\tjaccard with non coding: {jaccard}", &seq_id, &seq_seq, jaccard=jaccard_non_coding);
             }
-            println!("{0:?}\t{1:?}\tcoding\t{jaccard}\t{k}", &seq.id, &seq.seq, jaccard=jaccard_coding, k=ksize);
-            println!("{0:?}\t{1:?}\tnon_coding\t{jaccard}\t{k}", &seq.id, &seq.seq, jaccard=jaccard_non_coding, k=ksize);
+            println!("{0:?}\t{1:?}\tcoding\t{jaccard}\t{k}", &seq_id, &seq_seq, jaccard=jaccard_coding, k=ksize);
+            println!("{0:?}\t{1:?}\tnon_coding\t{jaccard}\t{k}", &seq_id, &seq_seq, jaccard=jaccard_non_coding, k=ksize);
 
         }).expect(&format!("Could not read {}", file));
 
