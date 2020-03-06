@@ -2,7 +2,7 @@ use std::str;
 use std::collections::HashSet;
 extern crate lazy_static;
 extern crate needletail;
-use needletail::{fastx};
+use needletail::{parse_sequence_path, Sequence};
 extern crate clap;
 use clap::{Arg, App, value_t};
 
@@ -43,7 +43,7 @@ fn main() {
         eprintln!("Counting k-mers in file: {}", file);
 
         let mut n_bases = 0;
-        fastx::fastx_cli(&file[..], |_| {}, |seq| {
+        parse_sequence_path(file, |_| {}, |seq| {
         // seq.id is the name of the record
         // seq.seq is the base sequence
         // seq.qual is an optional quality score
@@ -53,7 +53,7 @@ fn main() {
 
         // keep track of the number of AAAA (or TTTT via canonicalization) in the
         // file (normalize makes sure every base is capitalized for comparison)
-        for (_, kmer, _) in seq.normalize(false).kmers(ksize, false) {
+        for kmer in seq.kmers(ksize) {
             let kmer = str::from_utf8(&kmer).unwrap();
             all_kmers.insert(kmer.to_owned());
 //            println!("{}", kmer);
